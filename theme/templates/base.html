@@ -1,0 +1,34 @@
+{% load static tailwind_tags %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="description" content="django project">
+    <meta name="keywords" content="django, next.js, python, typescript">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    {% tailwind_css %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+      class="bg-gray-100 dark:bg-gray-900">
+
+{% include '_header.html' %}
+
+<div class="container mx-auto max-w-screen-xl p-4">
+    {% block content %}{% endblock %}
+</div>
+
+{% include '_footer.html' %}
+
+{% if debug %}
+    <script src="{% static 'htmx/1.9.12/htmx.js' %}"></script>
+{% else %}
+    <script src="{% static 'htmx/1.9.12/htmx.min.js' %}"></script>
+{% endif %}
+<script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
+<script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
+</body>
+</html>
