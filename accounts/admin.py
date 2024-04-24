@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from accounts.models import User
+from accounts.models import User, Profile
 
 
 @admin.register(User)
@@ -16,3 +16,8 @@ class UserAdmin(admin.ModelAdmin):
     ]
     list_display_links = ["username", "email"]
     list_filter = ["is_superuser", "is_staff", "is_active"]
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    pass
