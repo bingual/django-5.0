@@ -2,8 +2,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 from crispy_tailwind.layout import Submit
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.exceptions import ValidationError
 from django.forms import ModelForm
-from tailwind.validate import ValidationError
 
 from accounts.models import User, Profile
 

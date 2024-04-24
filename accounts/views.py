@@ -60,7 +60,7 @@ class LogoutView(DjangoLogoutView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        messages.success(self.request, message="로그아웃했습니다.")
+        messages.success(self.request, "로그아웃했습니다.")
         return response
 
 
