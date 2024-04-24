@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import (
     LoginView as DjangoLoginView,
     LogoutView as DjangoLogoutView,
+    RedirectURLMixin,
 )
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -15,15 +16,15 @@ from accounts.forms import LoginForm, SignupForm, ProfileForm
 from accounts.models import User, Profile
 
 
-class SignupView(CreateView):
+class SignupView(RedirectURLMixin, CreateView):
     model = User
     form_class = SignupForm
     template_name = "crispy_form.html"
-    success_url = "accounts:login"
+    success_url = reverse_lazy("accounts:login")
     extra_context = {"form_title": "회원가입"}
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
+        if self.request.user.is_authenticated:
             redirect_to = self.success_url
             if redirect_to != request.path:
                 messages.warning(request, "로그인 유저는 회원가입할 수 없습니다.")
