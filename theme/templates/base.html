@@ -24,6 +24,8 @@
 
 {% include '_footer.html' %}
 
+{% include '_toast_message.html' %}
+
 {% if debug %}
     <script src="{% static 'htmx/1.9.12/htmx.js' %}"></script>
 {% else %}
@@ -31,5 +33,6 @@
 {% endif %}
 <script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
 <script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
+
 </body>
 </html>
