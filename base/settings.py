@@ -61,12 +61,12 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "admin_honeypot",
+    "tailwind",
     "template_partials",
     "crispy_forms",
     "crispy_tailwind",
     "widget_tweaks",
     "formtools",
-    "tailwind",
     "taggit",
     # local apps
     "theme",
