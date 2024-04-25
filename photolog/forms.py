@@ -5,8 +5,9 @@ from crispy_forms.layout import Layout
 from crispy_tailwind.layout import Submit
 from django import forms
 from django.core.files import File
+from django.forms import inlineformset_factory, BaseInlineFormSet
 
-from photolog.models import Note
+from photolog.models import Note, Photo
 from theme.helper import make_thumb
 
 
@@ -48,7 +49,7 @@ class NoteCreateForm(forms.ModelForm):
                 "생성",
                 css_class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none "
                 "focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 "
-                "dark:hover:bg-blue-700 dark:focus:ring-blue-800",
+                "dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer",
             )
         )
 
@@ -66,3 +67,36 @@ class NoteCreateForm(forms.ModelForm):
                     "썸네일 생성 중에 오류가 발생했습니다."
                 ) from e
         return file_list
+
+
+class NoteUpdateForm(NoteCreateForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["photos"].required = False
+        self.helper.form_tag = False
+        self.helper.inputs = []
+
+
+class PhotoInlineForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        fields = ["image"]
+
+
+class CustomBaseInlineFormSet(BaseInlineFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if index == 0:
+            form.fields["DELETE"].widget = forms.HiddenInput()
+
+
+PhotoUpdateFormSet = inlineformset_factory(
+    parent_model=Note,
+    model=Photo,
+    form=PhotoInlineForm,
+    formset=CustomBaseInlineFormSet,
+    extra=0,
+    can_delete=True,
+)
+PhotoUpdateFormSet.helper = FormHelper()
+PhotoUpdateFormSet.helper.form_tag = False

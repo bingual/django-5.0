@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <form {% if form_action %}action="{{ form_action }}"{% endif %}
+          method="post"
+          {% if form.is_multipart or formset.is_multipart %}enctype="multipart/form-data"{% endif %}
+          novalidate
+    >
+        <div class="min-w-[448px] p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
+            {% if form_title %}
+                <h5 class="text-xl font-medium text-gray-900 dark:text-white mb-5">{{ form_title }}</h5>
+            {% endif %}
+            {% crispy form %}
+            <hr/>
+            {% if formset %}
+                {% crispy formset %}
+            {% endif %}
+            <hr/>
+            <input type="submit"
+                   class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer"
+                   {% if form_submit_label %}value="{{ form_submit_label }}"{% endif %}
+            />
+
+        </div>
+    </form>
+{% endblock %}

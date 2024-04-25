@@ -1,9 +1,10 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import CreateView, DetailView
 
-from photolog.forms import NoteCreateForm
+from photolog.forms import NoteCreateForm, NoteUpdateForm, PhotoUpdateFormSet
 from photolog.models import Note, Photo
 
 
@@ -43,6 +44,54 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
 
 
 note_new = NoteCreateView.as_view()
+
+
+@login_required
+def note_edit(request, pk):
+    note = get_object_or_404(Note, pk=pk, author=request.user)
+    photo_qs = note.photo_set.all()
+
+    if request.method == "GET":
+        note_form = NoteUpdateForm(instance=note, prefix="note")
+        photo_formset = PhotoUpdateFormSet(
+            queryset=photo_qs,
+            instance=note,
+            prefix="photos",
+        )
+    else:
+        note_form = NoteUpdateForm(
+            data=request.POST, files=request.FILES, instance=note, prefix="note"
+        )
+        photo_formset = PhotoUpdateFormSet(
+            queryset=photo_qs,
+            instance=note,
+            data=request.POST,
+            files=request.FILES,
+            prefix="photos",
+        )
+
+        if note_form.is_valid() and photo_formset.is_valid():
+            saved_note = note_form.save()
+
+            photo_file_list = note_form.cleaned_data.get("photos")
+            if photo_file_list:
+                Photo.create_photos(saved_note, photo_file_list)
+
+            photo_formset.save()
+            messages.success(request, f"기록#{saved_note.pk}을 수정했습니다.")
+
+            return redirect(saved_note)
+
+    return render(
+        request,
+        "crispy_form_and_formset.html",
+        {
+            "form_title": "기록 수정",
+            "form": note_form,
+            "formset": photo_formset,
+            "form_submit_label": "저장하기",
+        },
+    )
 
 
 class NoteDetailView(DetailView):
