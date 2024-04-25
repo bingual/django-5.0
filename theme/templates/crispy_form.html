@@ -4,7 +4,7 @@
 {% block content %}
     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-[448px] p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
         {% if form_title %}
-            <h5 class="text-xl font-medium text-gray-900 dark:text-white">{{ form_title }}</h5>
+            <h5 class="text-xl font-medium text-gray-900 dark:text-white mb-5">{{ form_title }}</h5>
         {% endif %}
         {% crispy form %}
     </div>
