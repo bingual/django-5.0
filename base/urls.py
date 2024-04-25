@@ -14,8 +14,8 @@ urlpatterns = [
             "admin_honeypot.urls",
         ),
     ),
-    path("", TemplateView.as_view(template_name="root.html"), name="root"),
     path("accounts/", include("accounts.urls")),
+    path("", include("photolog.urls")),
 ]
 
 # pillow
