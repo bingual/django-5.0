@@ -3,6 +3,8 @@ from typing import List
 from django.core.files import File
 from django.db import models
 from django.urls import reverse
+from django_lifecycle import LifecycleModelMixin
+from taggit.managers import TaggableManager
 
 from accounts.models import User
 from theme.helper import uuid_name_upload_to
@@ -16,10 +18,11 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-class Note(TimeStampedModel):
+class Note(LifecycleModelMixin, TimeStampedModel):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     content = models.TextField()
+    tags = TaggableManager(blank=True, help_text="쉼표로 구분하여 작성해주세요.")
 
     class Meta:
         ordering = ["-pk"]

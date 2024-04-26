@@ -31,7 +31,7 @@ class NoteCreateForm(forms.ModelForm):
 
     class Meta:
         model = Note
-        fields = ["title", "content"]
+        fields = ["title", "content", "tags"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,7 +40,7 @@ class NoteCreateForm(forms.ModelForm):
         self.helper.form_class = "helper_form"
         self.helper.label_class = "helper_label"
 
-        self.helper.layout = Layout("title", "content", "photos")
+        self.helper.layout = Layout("title", "content", "photos", "tags")
         self.helper.add_input(
             Submit(
                 "submit",

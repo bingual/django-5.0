@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ note.title }}</h5>
+        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white break-words">{{ note.title }}</h5>
         <div class="flex items-center mb-4">
             <p class="text-sm text-gray-600 dark:text-gray-400">작성자: {{ note.author }}</p>
             <span class="mx-2 text-gray-500">|</span>
@@ -76,6 +76,11 @@
             </div>
         {% endif %}
 
-        <p class="mb-4 font-normal text-gray-700 dark:text-gray-400">{{ note.content|linebreaksbr }}</p>
+        <p class="mb-4 font-normal text-gray-700 dark:text-gray-400 break-words">{{ note.content|linebreaksbr }}</p>
+
+        {% for tag in note.tags.all %}
+            <a class="inline-block mb-3 font-normal text-blue-700 dark:text-blue-400 break-words line-clamp-1"
+               href="{% url 'photolog:index' %}?tag={{ tag.name }}">#{{ tag.name }}</a>
+        {% endfor %}
     </div>
 {% endblock %}
