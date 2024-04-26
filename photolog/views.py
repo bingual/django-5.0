@@ -109,5 +109,10 @@ def note_delete(request, pk):
 class NoteDetailView(DetailView):
     model = Note
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.prefetch_related("photo_set")
+        return qs
+
 
 note_detail = NoteDetailView.as_view()

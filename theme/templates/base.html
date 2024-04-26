@@ -30,13 +30,12 @@
 {% else %}
     <script src="{% static 'htmx/1.9.12/htmx.min.js' %}"></script>
 {% endif %}
+<script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
+<script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
 <script>
     htmx.onLoad(function (content) {
         initFlowbite();
     })
 </script>
-<script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
-<script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
-
 </body>
 </html>

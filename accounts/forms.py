@@ -18,19 +18,15 @@ class SignupForm(UserCreationForm):
         self.fields["email"].required = True
         self.helper = FormHelper()
         self.helper.attrs = {"novalidate": True}
-        self.helper.form_class = "space-y-6"
-        self.helper.label_class = (
-            "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        )
+        self.helper.form_class = "helper_form"
+        self.helper.label_class = "helper_label"
 
         self.helper.layout = Layout("username", "password1", "password2", "email")
         self.helper.add_input(
             Submit(
                 "submit",
                 "회원가입",
-                css_class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none "
-                "focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 "
-                "dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer",
+                css_class="helper_submit",
             )
         )
 
@@ -49,19 +45,15 @@ class LoginForm(AuthenticationForm):
         super().__init__(request, *args, **kwargs)
         self.helper = FormHelper()
         self.helper.attrs = {"novalidate": True}
-        self.helper.form_class = "space-y-6"
-        self.helper.label_class = (
-            "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        )
+        self.helper.form_class = "helper_form"
+        self.helper.label_class = "helper_label"
 
         self.helper.layout = Layout("username", "password")
         self.helper.add_input(
             Submit(
                 "submit",
                 "로그인",
-                css_class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none "
-                "focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 "
-                "dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer",
+                css_class="helper_submit",
             )
         )
 
@@ -75,18 +67,14 @@ class ProfileForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.attrs = {"novalidate": True}
-        self.helper.form_class = "space-y-6"
-        self.helper.label_class = (
-            "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        )
+        self.helper.form_class = "helper_form"
+        self.helper.label_class = "helper_label"
 
         self.helper.layout = Layout("avatar")
         self.helper.add_input(
             Submit(
                 "submit",
                 "저장",
-                css_class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none "
-                "focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 "
-                "dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer",
+                css_class="helper_submit",
             )
         )

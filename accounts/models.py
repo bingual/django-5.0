@@ -28,5 +28,5 @@ class Profile(LifecycleModelMixin, models.Model):
             image_extension = splitext(self.avatar.name)[-1].lower()
 
             if image_width > 1024 or image_extension not in (".jpg", ".jpeg"):
-                thumb_file = make_thumb(self.avatar.file, 1024, 1024, 80)
+                thumb_file = make_thumb(self.avatar.file, 512, 512, 100)
                 self.avatar.save(thumb_file.name, thumb_file, save=False)

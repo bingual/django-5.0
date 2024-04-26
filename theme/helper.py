@@ -27,12 +27,12 @@ def uuid_name_upload_to(instance: models.Model, filename: str) -> str:
 
 
 def make_thumb(
-    image_file: File, max_width: int = 1024, max_height: int = 1024, quality=80
+    image_file: File, max_width: int = 1024, max_height: int = 1024, quality=100
 ) -> File:
     pil_image = Image.open(image_file)
     max_size = (max_width, max_height)
     pil_image.thumbnail(max_size)
-    if pil_image.mode == "RGBA":
+    if pil_image.mode != "RGB":
         pil_image = pil_image.convert("RGB")
 
     thumb_name = splitext(image_file.name)[0] + ".jpg"

@@ -37,19 +37,15 @@ class NoteCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.attrs = {"novalidate": True}
-        self.helper.form_class = "space-y-6"
-        self.helper.label_class = (
-            "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        )
+        self.helper.form_class = "helper_form"
+        self.helper.label_class = "helper_label"
 
         self.helper.layout = Layout("title", "content", "photos")
         self.helper.add_input(
             Submit(
                 "submit",
                 "생성",
-                css_class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none "
-                "focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 "
-                "dark:hover:bg-blue-700 dark:focus:ring-blue-800 cursor-pointer",
+                css_class="helper_submit",
             )
         )
 
