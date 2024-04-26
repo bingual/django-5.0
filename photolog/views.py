@@ -2,10 +2,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView
+from django_htmx.http import HttpResponseClientRedirect
 
 from photolog.forms import NoteCreateForm, NoteUpdateForm, PhotoUpdateFormSet
 from photolog.models import Note, Photo
+from theme.helper import login_required_hx
 
 
 def index(request):
@@ -92,6 +95,15 @@ def note_edit(request, pk):
             "form_submit_label": "저장하기",
         },
     )
+
+
+@login_required_hx
+def note_delete(request, pk):
+    note = get_object_or_404(Note, pk=pk, author=request.user)
+    if request.htmx:
+        note.delete()
+        messages.success(request, "기록을 삭제했습니다.")
+        return HttpResponseClientRedirect(redirect_to=reverse_lazy("photolog:index"))
 
 
 class NoteDetailView(DetailView):
