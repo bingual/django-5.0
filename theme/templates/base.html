@@ -1,4 +1,4 @@
-{% load static tailwind_tags %}
+{% load static tailwind_tags component_tags %}
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -11,6 +11,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     {% tailwind_css %}
+    {% component_css_dependencies %}
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
       class="bg-gray-100 dark:bg-gray-900">
@@ -23,8 +24,6 @@
 
 {% include '_footer.html' %}
 
-{% include '_toast_message.html' %}
-
 {% if debug %}
     <script src="{% static 'htmx/1.9.12/htmx.js' %}"></script>
 {% else %}
@@ -32,10 +31,25 @@
 {% endif %}
 <script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
 <script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
+{% component_js_dependencies %}
+<script src="{% static 'js/observe-node-insertion.js' %}"></script>
+<script src="{% static "js/toast-messages.js" %}"></script>
 <script>
     htmx.onLoad(function (content) {
         initFlowbite();
     })
+</script>
+
+{% include "_messages_as_event.html" %}
+
+<script>
+    document.body.addEventListener("htmx:responseError", event => {
+        console.error("HTMX 요청 에러:", event.detail);
+        const message = event.detail.error;
+        const tag = "error";
+        const toast_id = 999
+        htmx.trigger(document.body, "toast-message", {message, tag, toast_id});
+    });
 </script>
 </body>
 </html>

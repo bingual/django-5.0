@@ -79,8 +79,27 @@
         <p class="mb-4 font-normal text-gray-700 dark:text-gray-400 break-words">{{ note.content|linebreaksbr }}</p>
 
         {% for tag in note.tags.all %}
-            <a class="inline-block mb-3 font-normal text-blue-700 dark:text-blue-400 break-words line-clamp-1"
+            <a class="inline-block font-normal text-blue-700 dark:text-blue-400 break-words line-clamp-1"
                href="{% url 'photolog:index' %}?tag={{ tag.name }}">#{{ tag.name }}</a>
         {% endfor %}
     </div>
+    <div class="mt-5">
+        <div>
+            {% include 'photolog/_comment_form.html' with form=comment_form note_pk=note.pk %}
+        </div>
+        <div id="comment-list">
+            {% include 'photolog/_comment_list.html' with user=request.user comment_list=comment_list only %}
+        </div>
+    </div>
+
+    {% if comment_list %}
+        <div class="mt-5">
+            <a href="#"
+               hx-get="{% url 'photolog:comment_list' note.pk %}"
+               hx-vals="js:{_:new Date().getTime()}"
+               hx-trigger="click, refresh-comment-list from:body"
+               hx-target="#comment-list"
+               class="block helper_submit">댓글 새로고침</a>
+        </div>
+    {% endif %}
 {% endblock %}

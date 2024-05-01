@@ -3,11 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView
-from django_htmx.http import HttpResponseClientRedirect
+from django.utils.decorators import method_decorator
+from django.views.generic import CreateView, DetailView, ListView
+from django_htmx.http import HttpResponseClientRedirect, trigger_client_event
 
-from photolog.forms import NoteCreateForm, NoteUpdateForm, PhotoUpdateFormSet
-from photolog.models import Note, Photo
+from photolog.forms import (
+    NoteCreateForm,
+    NoteUpdateForm,
+    PhotoUpdateFormSet,
+    CommentForm,
+)
+from photolog.models import Note, Photo, Comment
 from theme.helper import login_required_hx
 
 
@@ -120,5 +126,75 @@ class NoteDetailView(DetailView):
         qs = qs.prefetch_related("photo_set")
         return qs
 
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        note = self.object
+        context_data["comment_form"] = CommentCreateView().get_form_class()(
+            note=self.object
+        )
+        context_data["comment_list"] = note.comment_set.select_related(
+            "author__profile"
+        )
+        return context_data
+
 
 note_detail = NoteDetailView.as_view()
+
+
+class CommentListView(ListView):
+    model = Comment
+    template_name = "photolog/_comment_list.html"
+
+    def get_queryset(self):
+        note_pk = self.kwargs["note_pk"]
+        qs = super().get_queryset()
+        qs = qs.filter(note__pk=note_pk)
+        qs = qs.select_related("author__profile")
+        return qs
+
+
+comment_list = CommentListView.as_view()
+
+
+@method_decorator(login_required_hx, name="dispatch")
+class CommentCreateView(CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = "photolog/_comment_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        note_pk = self.kwargs["note_pk"]
+        self.note = get_object_or_404(Note, pk=note_pk)  # noqa
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["note"] = self.note
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = self.get_form()
+        return context
+
+    def form_valid(self, form):
+        comment = form.save(commit=False)
+        comment.author = self.request.user
+        comment.note = self.note
+        comment.save()
+
+        messages.success(self.request, "댓글을 저장했습니다.")
+        response = render(self.request, "_messages_as_event.html")
+        response = trigger_client_event(response, "refresh-comment-list")
+
+        return response
+
+
+comment_new = CommentCreateView.as_view()
+
+
+def test(request):
+    messages.success(request, "ok")
+    messages.error(request, "ok")
+    messages.warning(request, "ok")
+    return render(request, "root.html", {})

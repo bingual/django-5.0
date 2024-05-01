@@ -49,3 +49,15 @@ class Photo(TimeStampedModel):
         cls.objects.bulk_create(photo_list)
 
         return photo_list
+
+
+class Comment(TimeStampedModel):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    note = models.ForeignKey(Note, on_delete=models.CASCADE)
+    message = models.TextField()
+
+    class Meta:
+        ordering = ["-pk"]
+
+    def __str__(self):
+        return self.message

@@ -1,0 +1,25 @@
+{% load component_tags crispy_forms_tags partials %}
+
+{% partialdef form %}
+    {% crispy form %}
+{% endpartialdef %}
+
+{% if request.method == "POST" %}
+    {% partial form %}
+{% else %}
+    {% component "modal-form" %}
+        {% fill "modal-title" %}
+            {% if not form.instance.pk %}댓글 작성{% else %}댓글 수정{% endif %}
+        {% endfill %}
+        {% fill "modal-body" %}
+            {% partial form %}
+        {% endfill %}
+    {% endcomponent %}
+    <script>
+        document.addEventListener('htmx:afterRequest', function (event) {
+            if (event.detail.target.id === 'comment-form') {
+                document.getElementById('id_message').value = '';
+            }
+        });
+    </script>
+{% endif %}

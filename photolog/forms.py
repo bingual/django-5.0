@@ -6,8 +6,9 @@ from crispy_tailwind.layout import Submit
 from django import forms
 from django.core.files import File
 from django.forms import inlineformset_factory, BaseInlineFormSet
+from django.urls import reverse
 
-from photolog.models import Note, Photo
+from photolog.models import Note, Photo, Comment
 from theme.helper import make_thumb
 
 
@@ -96,3 +97,29 @@ PhotoUpdateFormSet = inlineformset_factory(
 )
 PhotoUpdateFormSet.helper = FormHelper()
 PhotoUpdateFormSet.helper.form_tag = False
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["message"]
+
+    def __init__(self, *args, **kwargs):
+        self.note = kwargs.pop("note", None)
+        super().__init__(*args, **kwargs)
+
+        if self.note:
+            self.helper = FormHelper()
+            self.helper.form_id = "comment-form"
+            self.helper.form_class = "p-4 md:p-5"
+            self.helper.form_show_labels = False
+            self.helper.attrs = {
+                "hx-post": reverse(
+                    "photolog:comment_new", kwargs={"note_pk": self.note.pk}
+                ),
+                "hx-trigger": "submit",
+                "hx-swap": "none",
+                "autocomplete": "off",
+                "novalidate": True,
+            }
+            self.helper.layout = Layout("message")

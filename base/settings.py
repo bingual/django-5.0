@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
+    # "django.contrib.staticfiles",
+    "django_components.safer_staticfiles",
     # third apps
     "django_extensions",
     "django_filters",
@@ -110,7 +111,9 @@ ROOT_URLCONF = "base.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / "theme" / "src-django-components",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -190,6 +193,10 @@ USE_TZ = env.bool("USE_TZ", default=False)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+STATICFILES_DIRS = [
+    BASE_DIR / "theme" / "src-django-components",
+]
 
 MEDIA_ROOT = BASE_DIR / "media"
 
