@@ -23,9 +23,9 @@ django-taggit = "*"
 django-admin-honeypot-updated-2021 = "*"
 django-tailwind = "*"
 django-filter = "*"
-psycopg2-binary = "*"
 pillow = "*"
 markdown = "*"
+psycopg2 = "*"
 
 [dev-packages]
 black = "*"
@@ -34,6 +34,7 @@ ipython = "*"
 django-debug-toolbar = "*"
 django-browser-reload = "*"
 httpie = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.12"
