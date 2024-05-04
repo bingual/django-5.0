@@ -69,6 +69,5 @@
 
         const container = getToastContainer();
         container.insertAdjacentHTML('afterbegin', html);
-        const toastEl = container.querySelector('.toast:first-child');
     });
 })();

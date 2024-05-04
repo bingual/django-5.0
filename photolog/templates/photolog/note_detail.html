@@ -12,14 +12,14 @@
                 <a href="{% url 'photolog:note_edit' note.pk %}"
                    class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:underline">수정</a>
                 <span class="mx-2 text-gray-500">|</span>
-                <p class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:underline"
+                <a class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:underline"
                    hx-delete="{% url 'photolog:note_delete' note.pk %}"
                    hx-confirm="정말 삭제하시겠습니까?"
                    hx-swap="none"
                    hx-trigger="click"
                 >
                     삭제
-                </p>
+                </a>
             {% endif %}
         </div>
 
@@ -85,21 +85,20 @@
     </div>
     <div class="mt-5">
         <div>
-            {% include 'photolog/_comment_form.html' with form=comment_form note_pk=note.pk %}
+            {% include 'photolog/_comment_form.html' with form=comment_form %}
         </div>
         <div id="comment-list">
             {% include 'photolog/_comment_list.html' with user=request.user comment_list=comment_list only %}
         </div>
     </div>
 
-    {% if comment_list %}
-        <div class="mt-5">
-            <a href="#"
-               hx-get="{% url 'photolog:comment_list' note.pk %}"
-               hx-vals="js:{_:new Date().getTime()}"
-               hx-trigger="click, refresh-comment-list from:body"
-               hx-target="#comment-list"
-               class="block helper_submit">댓글 새로고침</a>
-        </div>
-    {% endif %}
+
+    <div class="mt-5">
+        <a href="#"
+           hx-get="{% url 'photolog:comment_list' note.pk %}"
+           hx-vals="js:{_:new Date().getTime()}"
+           hx-trigger="click, refresh-comment-list from:body"
+           hx-target="#comment-list"
+           class="block helper_submit">댓글 새로고침</a>
+    </div>
 {% endblock %}

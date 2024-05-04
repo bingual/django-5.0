@@ -10,6 +10,13 @@
     <meta name="keywords" content="django, next.js, python, typescript">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
+    <script src="{% static 'htmx/1.9.12/htmx.min.js' %}"></script>
+    <script>
+        htmx.onLoad(function (content) {
+            initFlowbite();
+        })
+    </script>
     {% tailwind_css %}
     {% component_css_dependencies %}
 </head>
@@ -24,32 +31,25 @@
 
 {% include '_footer.html' %}
 
-{% if debug %}
-    <script src="{% static 'htmx/1.9.12/htmx.js' %}"></script>
-{% else %}
-    <script src="{% static 'htmx/1.9.12/htmx.min.js' %}"></script>
-{% endif %}
-<script src="{% static 'js/flowbite/2.3.0/flowbite.min.js' %}"></script>
 <script src="{% static 'js/flowbite/2.3.0/darkmode.js' %}"></script>
 {% component_js_dependencies %}
 <script src="{% static 'js/observe-node-insertion.js' %}"></script>
 <script src="{% static "js/toast-messages.js" %}"></script>
-<script>
-    htmx.onLoad(function (content) {
-        initFlowbite();
-    })
-</script>
 
 {% include "_messages_as_event.html" %}
 
 <script>
+    let toastCounter = 1;
     document.body.addEventListener("htmx:responseError", event => {
         console.error("HTMX 요청 에러:", event.detail);
         const message = event.detail.error;
         const tag = "error";
-        const toast_id = 999
+        const toast_id = toastCounter;
+        toastCounter++;
         htmx.trigger(document.body, "toast-message", {message, tag, toast_id});
+        initFlowbite()
     });
 </script>
+
 </body>
 </html>
