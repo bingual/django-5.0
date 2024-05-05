@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "theme",
     "accounts",
     "photolog",
+    "product",
 ]
 
 # django-tailwind
