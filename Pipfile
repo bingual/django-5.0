@@ -26,6 +26,8 @@ django-filter = "*"
 pillow = "*"
 markdown = "*"
 psycopg2 = "*"
+playwright = "*"
+requests = "*"
 
 [dev-packages]
 black = "*"
@@ -35,6 +37,7 @@ django-debug-toolbar = "*"
 django-browser-reload = "*"
 httpie = "*"
 psycopg2-binary = "*"
+pytest-playwright = "*"
 
 [requires]
 python_version = "3.12"
