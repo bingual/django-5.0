@@ -74,7 +74,6 @@ INSTALLED_APPS = [
     "accounts",
     "photolog",
     "product",
-    "crawling",
 ]
 
 # django-tailwind
@@ -253,3 +252,5 @@ TAGGIT_CASE_INSENSITIVE = env.bool("TAGGIT_CASE_INSENSITIVE", default=True)
 COMPONENTS = {
     "slot_context_behavior": "allow_override",  # 디폴트: "prefer_root"
 }
+
+DJANGO_ALLOW_ASYNC_UNSAFE = env.bool("DJANGO_ALLOW_ASYNC_UNSAFE", default=False)
