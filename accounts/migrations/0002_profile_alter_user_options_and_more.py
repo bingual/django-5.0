@@ -2,7 +2,7 @@
 
 import django.db.models.deletion
 import django_lifecycle.mixins
-import theme.helper
+import theme.utils
 from django.conf import settings
 from django.db import migrations, models
 
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "avatar",
-                    models.ImageField(upload_to=theme.helper.uuid_name_upload_to),
+                    models.ImageField(upload_to=theme.utils.uuid_name_upload_to),
                 ),
             ],
             bases=(django_lifecycle.mixins.LifecycleModelMixin, models.Model),

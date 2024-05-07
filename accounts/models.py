@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django_lifecycle import hook, LifecycleModelMixin, BEFORE_SAVE, BEFORE_UPDATE
 
-from theme.helper import make_thumb, uuid_name_upload_to
+from theme.utils import make_thumb, uuid_name_upload_to
 
 
 class User(AbstractUser):

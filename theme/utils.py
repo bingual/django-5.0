@@ -1,8 +1,10 @@
 from functools import wraps
+from io import BytesIO
 from os.path import splitext
 from urllib.parse import urlparse, ParseResult, parse_qs, urlencode, urlunparse
 from uuid import uuid4
 
+import pandas as pd
 from PIL import Image
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -98,3 +100,12 @@ def login_required_hx(
         return decorator(function)
 
     return decorator
+
+
+def create_excel_file(data, filename):
+    df = pd.json_normalize(data)
+    io = BytesIO()
+    io.name = filename
+    df.to_excel(io, index=False)  # noqa
+    io.seek(0)
+    return io

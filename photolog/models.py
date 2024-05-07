@@ -7,7 +7,7 @@ from django_lifecycle import LifecycleModelMixin
 from taggit.managers import TaggableManager
 
 from accounts.models import User
-from theme.helper import uuid_name_upload_to
+from theme.utils import uuid_name_upload_to
 
 
 class TimeStampedModel(models.Model):

@@ -9,7 +9,7 @@ from django.forms import inlineformset_factory, BaseInlineFormSet
 from django.urls import reverse
 
 from photolog.models import Note, Photo, Comment
-from theme.helper import make_thumb
+from theme.utils import make_thumb
 
 
 class MultipleFileInput(forms.ClearableFileInput):

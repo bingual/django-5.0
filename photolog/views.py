@@ -14,7 +14,7 @@ from photolog.forms import (
     CommentForm,
 )
 from photolog.models import Note, Photo, Comment
-from theme.helper import login_required_hx
+from theme.utils import login_required_hx
 
 
 def index(request):
