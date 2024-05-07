@@ -73,7 +73,7 @@ INSTALLED_APPS = [
     "theme",
     "accounts",
     "photolog",
-    "product",
+    "shop",
 ]
 
 # django-tailwind
@@ -212,6 +212,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # https://www.django-rest-framework.org/
 
 REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+        "theme.renderers.PandasXlsxRenderer",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ],

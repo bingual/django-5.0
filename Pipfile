@@ -28,6 +28,10 @@ markdown = "*"
 psycopg2 = "*"
 playwright = "*"
 requests = "*"
+pandas = "*"
+openpyxl = "*"
+tqdm = "*"
+aiohttp = "*"
 
 [dev-packages]
 black = "*"
