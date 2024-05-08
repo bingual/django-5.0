@@ -1,28 +1,43 @@
-import openpyxl
-from django.http import FileResponse
 from rest_framework import viewsets
-from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import LimitOffsetPagination
 
 from shop.serializers import ProductSerializer
-from theme.utils import create_excel_file
+from theme.utils import generate_excel_response
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = ProductSerializer.get_optimized_queryset()
     serializer_class = ProductSerializer
+    pagination_class = LimitOffsetPagination
+
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = [
+        "brand",
+        "category",
+        "name",
+    ]
+    ordering_fields = ["pk", "price", "sale_price"]
+    ordering = ["-pk"]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
 
         if request.accepted_renderer.format == "xlsx":
             filename = "product_list.xlsx"
-            excel_file = create_excel_file(serializer.data, filename)
-            response = FileResponse(
-                excel_file,
-                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-            response["Content-Disposition"] = f'attachment; filename="{filename}"'
-            return response
+            return generate_excel_response(serializer.data, filename)
         else:
-            return Response(serializer.data)
+            response = super().list(request, *args, **kwargs)
+            return response
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        if request.accepted_renderer.format == "xlsx":
+            filename = "product_detail.xlsx"
+            return generate_excel_response(serializer.data, filename)
+        else:
+            response = super().retrieve(request, *args, **kwargs)
+            return response

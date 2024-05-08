@@ -4,10 +4,19 @@ from rest_framework import serializers
 from shop.models import Product
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Product
-        fields = ["pk", "brand", "category", "thumb", "name", "price", "sale_price"]
+        fields = [
+            "url",
+            "pk",
+            "brand",
+            "category",
+            "thumb",
+            "name",
+            "price",
+            "sale_price",
+        ]
 
     @staticmethod
     def get_optimized_queryset() -> QuerySet[Product]:

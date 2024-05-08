@@ -1,6 +1,7 @@
 from functools import wraps
 from io import BytesIO
 from os.path import splitext
+from typing import Dict, IO, Union, List
 from urllib.parse import urlparse, ParseResult, parse_qs, urlencode, urlunparse
 from uuid import uuid4
 
@@ -12,11 +13,15 @@ from django.contrib.auth.decorators import login_required as django_login_requir
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.db import models
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse
 from django.shortcuts import resolve_url
 from django.utils import timezone
 from django.utils.encoding import force_str
 from django_htmx.http import HttpResponseClientRedirect
+from openpyxl.styles import Font
+from openpyxl.styles.fills import PatternFill
+from openpyxl.utils.cell import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
 
 
 def uuid_name_upload_to(instance: models.Model, filename: str) -> str:
@@ -102,10 +107,83 @@ def login_required_hx(
     return decorator
 
 
-def create_excel_file(data, filename):
+def generate_excel_response(data: Union[Dict, List], filename: str) -> FileResponse:
+    excel_file = create_excel_file(data, filename)
+    response = FileResponse(
+        excel_file,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+def calculate_dimension(worksheet: Worksheet) -> None:
+    for column_cells in worksheet.columns:
+        length = max(len(str(cell.value)) for cell in column_cells)
+        adjusted_width = (length + 2) * 1.2  # 조정된 폭 계산
+        column_letter = get_column_letter(column_cells[0].column)
+        worksheet.column_dimensions[column_letter].width = adjusted_width
+
+
+def cell_pattern_fill(
+    df: pd.DataFrame,
+    worksheet: Worksheet,
+    head_fill_color: str,
+    head_font_color: str,
+    body_fill_color: str,
+    body_font_color: str,
+    fill_type: str,
+) -> None:
+    # 최상위 행
+    for col in range(1, len(df.columns) + 1):
+        cell = worksheet.cell(row=1, column=col)
+        cell.fill = PatternFill(
+            start_color=head_fill_color,
+            end_color=head_fill_color,
+            fill_type=fill_type,  # noqa
+        )
+        cell.font = Font(color=head_font_color, bold=True)
+
+    # 하위 행
+    for row in range(2, worksheet.max_row + 1):
+        for col in range(1, len(df.columns) + 1):
+            cell = worksheet.cell(row=row, column=col)
+            if row % 2 == 0:
+                cell.fill = PatternFill(
+                    start_color=body_fill_color,
+                    end_color=body_fill_color,
+                    fill_type=fill_type,  # noqa
+                )
+                cell.font = Font(color=body_font_color)
+            if col == 4:
+                cell.hyperlink = str(df.iloc[row - 2]["thumb"])
+                cell.font = Font(color="0000FF")
+
+
+def create_excel_file(data: Union[Dict, List], filename: str) -> IO[bytes]:
     df = pd.json_normalize(data)
+
+    if "url" in df.columns:
+        df = df.drop("url", axis=1)
+
     io = BytesIO()
     io.name = filename
-    df.to_excel(io, index=False)  # noqa
+    writer = pd.ExcelWriter(io, engine="openpyxl")  # noqa
+    df.to_excel(writer, index=False, sheet_name="Sheet1")
+    workbook = writer.book
+    worksheet = workbook.active
+
+    cell_pattern_fill(
+        df,
+        worksheet,
+        "4472c4",
+        "FFFFFF",
+        "d9e1f2",
+        "000000",
+        "" "solid",
+    )
+    calculate_dimension(worksheet)
+
+    writer._save()  # noqa
     io.seek(0)
     return io
