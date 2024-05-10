@@ -9,17 +9,17 @@ from shop.models import Product, Category, Brand
 from theme.utils import get_chunks, convert_file
 
 env = environ.Env()
-url = env("CRAWLING_PRODUCT_URL")
+URL = env("CRAWLING_PRODUCT_URL")
 
-page_url_list = [
-    f"{url}141",
-    f"{url}142",
-    f"{url}143",
-    f"{url}144",
-    f"{url}145",
-    f"{url}146",
+PAGE_URL_LIST = [
+    f"{URL}141",
+    f"{URL}142",
+    f"{URL}143",
+    f"{URL}144",
+    f"{URL}145",
+    f"{URL}146",
 ]
-category_list = ["아우터", "상의", "하의", "신발", "악세사리", "그루밍"]
+CATEGORY_LIST = ["아우터", "상의", "하의", "신발", "악세사리", "그루밍"]
 
 
 class Command(BaseCommand):
@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 return
 
         if Category.objects.count() == 0:
-            self.create_categories(category_list)
+            self.create_categories(CATEGORY_LIST)
 
         with sync_playwright() as p:
             print("크롤링 시작")
@@ -48,7 +48,7 @@ class Command(BaseCommand):
             browser = p.chromium.launch()
             page = browser.new_page()
 
-            for page_url, category_name in zip(page_url_list, category_list):
+            for page_url, category_name in zip(PAGE_URL_LIST, CATEGORY_LIST):
                 page.goto(page_url)
 
                 product_elem_list = page.locator(

@@ -80,4 +80,8 @@ class Command(BaseCommand):
                 "article > div > div > div.item__info > h3 > div > a > span > span"
             ).first.inner_text()
 
+            pbar.set_postfix(
+                brand=f"{i + 1}/{brand_count}",
+                name=name,
+            )
             yield logo_url, name
