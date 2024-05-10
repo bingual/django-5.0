@@ -1,8 +1,12 @@
+import itertools
+import os
+import urllib
 from functools import wraps
 from io import BytesIO
 from os.path import splitext
-from typing import Dict, IO, Union, List
+from typing import Dict, IO, Union, List, Iterator
 from urllib.parse import urlparse, ParseResult, parse_qs, urlencode, urlunparse
+from urllib.request import urlopen
 from uuid import uuid4
 
 import pandas as pd
@@ -180,10 +184,23 @@ def create_excel_file(data: Union[Dict, List], filename: str) -> IO[bytes]:
         "FFFFFF",
         "d9e1f2",
         "000000",
-        "" "solid",
+        "solid",
     )
     calculate_dimension(worksheet)
 
     writer._save()  # noqa
     io.seek(0)
     return io
+
+
+def get_chunks(iterable: Iterator, chunk_size: int = 100) -> Iterator:
+    iterator = iterable if hasattr(iterable, "__next__") else iter(iterable)
+    for first in iterator:
+        yield itertools.chain([first], itertools.islice(iterator, chunk_size - 1))
+
+
+def convert_file(url: str):
+    response = urllib.request.urlopen(url)
+    filename = os.path.basename(urlparse(url).path)
+    image_file = ContentFile(content=response.read(), name=filename)
+    return image_file
