@@ -11,6 +11,7 @@ class TimeStampedModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ["-pk"]
 
 
 class Brand(TimeStampedModel):
@@ -26,14 +27,17 @@ class Brand(TimeStampedModel):
         return self.name
 
 
-# class BrandThumbnail(TimeStampedModel):
-#     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
-#     thumb = ProcessedImageField(
-#         upload_to=uuid_name_upload_to,
-#         processors=[ResizeToFill(512, 512)],
-#         format="JPEG",
-#         options={"quality": 100},
-#     )
+class BrandThumbnail(TimeStampedModel):
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
+    thumb = ProcessedImageField(
+        upload_to=uuid_name_upload_to,
+        processors=[ResizeToFill(512, 512)],
+        format="JPEG",
+        options={"quality": 100},
+    )
+
+    def __str__(self):
+        return self.brand.name
 
 
 class Category(models.Model):
