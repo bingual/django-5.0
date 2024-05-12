@@ -1,4 +1,6 @@
+import urllib
 from typing import Iterator, List
+from urllib.parse import urlparse
 
 import environ
 from django.core.management import BaseCommand
@@ -50,6 +52,7 @@ class Command(BaseCommand):
 
             for page_url, category_name in zip(PAGE_URL_LIST, CATEGORY_LIST):
                 page.goto(page_url)
+                page.wait_for_url(page_url)
 
                 product_elem_list = page.locator(
                     "#best__product-list > li > article > div"
@@ -92,13 +95,12 @@ class Command(BaseCommand):
         pbar = tqdm(
             product_elem_list, total=product_count, desc="제품 세부정보 생성 중"
         )
+
         for i, product_elem in enumerate(pbar):
             thumb_url = product_elem.locator(
                 "div.item__thumb > a > img"
             ).first.get_attribute("src")
-
-            if not thumb_url.startswith("https"):
-                thumb_url = "https:" + thumb_url
+            thumb_url = urllib.parse.urljoin("https:", thumb_url)
 
             brand = product_elem.locator("p.info__brand").first.inner_text()
             name = product_elem.locator("h3.info__title").first.inner_text()
@@ -124,4 +126,5 @@ class Command(BaseCommand):
                 category=category_name,
                 name=name,
             )
+
             yield brand, thumb_url, name, sale_price, price
