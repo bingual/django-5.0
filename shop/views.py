@@ -1,15 +1,15 @@
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.pagination import LimitOffsetPagination
 
 from shop.serializers import ProductSerializer
+from theme.pagination import make_pagination_class
 from theme.utils import generate_excel_response
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = ProductSerializer.get_optimized_queryset()
     serializer_class = ProductSerializer
-    pagination_class = LimitOffsetPagination
+    pagination_class = make_pagination_class(cls_type="page_number", page_size=50)
 
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = [

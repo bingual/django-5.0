@@ -5,6 +5,9 @@ from shop.models import Product
 
 
 class ProductSerializer(serializers.HyperlinkedModelSerializer):
+    brand = serializers.StringRelatedField()
+    category = serializers.StringRelatedField()
+
     class Meta:
         model = Product
         fields = [
@@ -20,6 +23,12 @@ class ProductSerializer(serializers.HyperlinkedModelSerializer):
 
     @staticmethod
     def get_optimized_queryset() -> QuerySet[Product]:
-        return Product.objects.all().only(
-            "pk", "brand", "category", "thumb", "name", "price", "sale_price"
+        return Product.objects.select_related("brand", "category").only(
+            "pk",
+            "brand__name",
+            "category__name",
+            "thumb",
+            "name",
+            "price",
+            "sale_price",
         )

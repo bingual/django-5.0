@@ -220,8 +220,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": 100,
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": env.int("REST_FRAMEWORK_PAGE_SIZE", default=10),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -238,6 +238,8 @@ CORS_ALLOWED_ORIGINS = env.list(
 )
 
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
+
+SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default="adora.com")
 
 # django-crispy-forms
 # https://github.com/django-crispy-forms/crispy-tailwind
