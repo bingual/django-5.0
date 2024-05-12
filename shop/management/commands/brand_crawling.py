@@ -1,14 +1,19 @@
+import sys
 import urllib
-from typing import Iterator, List
+from collections import deque
+from typing import Iterator, Union, Tuple, List
 from urllib.parse import urlparse
 
+from colorama import Fore
 from django.core.management import BaseCommand
+from django.db import transaction
 from environ import environ
 from playwright.sync_api import sync_playwright, Page, Locator
 from tqdm import tqdm
 
-from shop.models import Brand
-from theme.utils import convert_file, get_chunks
+from shop.models import Brand, BrandThumbnail
+from theme.errors import ThumbnailFetchError
+from theme.utils import convert_file
 
 env = environ.Env()
 URL = env("CRAWLING_BRAND_URL")
@@ -34,54 +39,129 @@ class Command(BaseCommand):
             page = browser.new_page()
             page.goto(URL)
 
-            self.scroll_to_the_end(page)
+            self.click_on_load_more_button(page)
+            self.scroll_to_the_top(page)
 
-            brand_elem_list = page.locator("#brand__product-list > li").all()
+            try:
+                for (
+                    brand_instances,
+                    brand_thumb_instances,
+                ) in self.generate_brand_details(page):
+                    with transaction.atomic():
+                        Brand.objects.bulk_create(brand_instances)
+                        BrandThumbnail.objects.bulk_create(brand_thumb_instances)
 
-            brand_instances = (
-                Brand(logo_thumb=convert_file(logo_url), name=name)
-                for logo_url, name in self.generate_brand_details(brand_elem_list)
-            )
-
-            for chunks in get_chunks(brand_instances, chunk_size=100):
-                Brand.objects.bulk_create(chunks, ignore_conflicts=True)
+            except ThumbnailFetchError as e:
+                print(f"{Fore.RED}ERROR: {e.message}\nFAILED: {e.image_url}")
+                browser.close()
+                sys.exit(1)
 
             browser.close()
 
         print("크롤링 종료")
 
     @classmethod
-    def scroll_to_the_end(cls, page: Page) -> None:
-        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-
+    def click_on_load_more_button(cls, page: Page) -> None:
         while load_more_button := page.locator(
             "#component__brand > div.brand__content > div.component__product-more-button > a"
         ).first:
 
             if load_more_button:
-                load_more_button.click(delay=100)
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                load_more_button.click(delay=500)
 
-                class_attribute = load_more_button.get_attribute("class")
-                if class_attribute and "displaynone" in class_attribute:
+                if not load_more_button.is_visible():
                     break
 
     @classmethod
-    def generate_brand_details(cls, brand_list: List[Locator]) -> Iterator[str]:
-        brand_count = len(brand_list)
-        pbar = tqdm(brand_list, total=brand_count, desc="브랜드 세부정보 생성 중")
+    def scroll_to_the_top(cls, page: Page) -> None:
+        body_locator = page.locator("body")
+        scroll_top = body_locator.evaluate("() => document.documentElement.scrollTop")
+
+        if scroll_top > 0:
+            body_locator.evaluate("() => window.scrollTo(0, 0)")
+
+        page.wait_for_function("() => document.documentElement.scrollTop === 0")
+
+    # TODO: 튜플 리스트를 반환하기 때문에 제너레이터의 효과가 없음 이후에 수정예정
+    @classmethod
+    def generate_brand_details(
+        cls, page: Page
+    ) -> Iterator[Tuple[List[Brand], List[BrandThumbnail]]]:
+        brand_elem_list = page.locator("#brand__product-list > li").all()
+        brand_count = len(brand_elem_list)
+        pbar = tqdm(brand_elem_list, total=brand_count, desc="브랜드 세부정보 생성 중")
+
+        brand_instance_que = deque()
+        brand_thumb_instance_que = deque()
+
         for i, brand_elem in enumerate(pbar):
-            logo_query = brand_elem.locator(
+
+            logo_elem = brand_elem.locator(
                 "article > div > div > div.item__thumb > a > img"
             ).first
-            logo_url = logo_query.get_attribute("src")
+            logo_url = logo_elem.get_attribute("src")
+
+            if logo_url == "/_hashcorp/theme/assets/images/preload.png":
+                raise ThumbnailFetchError(
+                    message="썸네일을 가져오지 못했습니다.", image_url=logo_url
+                )
+
             logo_url = urllib.parse.urljoin("https:", logo_url)
+
             name = brand_elem.locator(
                 "article > div > div > div.item__info > h3 > div > a > span > span"
             ).first.inner_text()
+
+            brand_instance = Brand(logo_thumb=convert_file(logo_url), name=name)
+            brand_instance_que.append(brand_instance)
+
+            for thumb_url in cls.generate_brand_thumb_details(page, brand_elem):
+                brand_thumb_instance_que.append(
+                    BrandThumbnail(brand=brand_instance, thumb=convert_file(thumb_url))
+                )
+
+            page.mouse.wheel(0, 300)
 
             pbar.set_postfix(
                 brand=f"{i + 1}/{brand_count}",
                 name=name,
             )
-            yield logo_url, name
+
+        yield brand_instance_que, brand_thumb_instance_que
+
+    @classmethod
+    def generate_brand_thumb_details(
+        cls, page: Page, brand_elem: Locator
+    ) -> Union[Iterator[str], None]:
+        swiper_elem = brand_elem.locator("div.brand-list__swiper").first
+
+        if swiper_elem.count() <= 0:
+            return None
+
+        swiper_box = swiper_elem.bounding_box()
+        swiper_pos_x = swiper_box["x"] + swiper_box["width"] / 2
+        swiper_pos_y = swiper_box["y"] + swiper_box["height"] / 2
+
+        for _ in range(20):
+            page.mouse.move(swiper_pos_x, swiper_pos_y)
+            page.mouse.down()
+            page.mouse.move(swiper_pos_x + 100, swiper_pos_y)
+            page.mouse.move(swiper_pos_x, swiper_pos_y)
+            page.mouse.up()
+
+        thumb_elem_list = swiper_elem.locator("ul > li").all()
+
+        for thumb_elem in thumb_elem_list:
+            thumb_url = thumb_elem.locator(
+                "article > div > div.item-wrap > div.item__thumb > a > img"
+            ).first.get_attribute("src")
+
+            if thumb_url == "/_hashcorp/theme/assets/images/preload.png":
+                raise ThumbnailFetchError(
+                    message="썸네일을 가져오지 못했습니다.",
+                    image_url=thumb_url,
+                )
+
+            thumb_url = urllib.parse.urljoin("https:", thumb_url)
+
+            yield thumb_url

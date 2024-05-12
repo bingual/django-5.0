@@ -33,6 +33,7 @@ openpyxl = "*"
 tqdm = "*"
 aiohttp = "*"
 django-imagekit = "*"
+colorama = "*"
 
 [dev-packages]
 black = "*"
