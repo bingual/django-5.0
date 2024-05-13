@@ -13,8 +13,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = [
-        "brand",
-        "category",
+        "brand__name",
+        "category__name",
         "name",
     ]
     ordering_fields = ["pk", "price", "sale_price"]

@@ -199,7 +199,7 @@ def get_chunks(iterable: Iterator, chunk_size: int = 100) -> Iterator:
         yield itertools.chain([first], itertools.islice(iterator, chunk_size - 1))
 
 
-def convert_file(url: str):
+def convert_file(url: str) -> File:
     response = urllib.request.urlopen(url)
     filename = os.path.basename(urlparse(url).path)
     image_file = ContentFile(content=response.read(), name=filename)

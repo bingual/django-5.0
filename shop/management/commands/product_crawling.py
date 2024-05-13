@@ -1,14 +1,15 @@
 import urllib
-from typing import Iterator, List
+from typing import List, Tuple, Dict
 from urllib.parse import urlparse
 
 import environ
 from django.core.management import BaseCommand
+from django.db import transaction
 from playwright.sync_api import sync_playwright, Locator
 from tqdm import tqdm
 
 from shop.models import Product, Category, Brand
-from theme.utils import get_chunks, convert_file
+from theme.utils import convert_file
 
 env = environ.Env()
 URL = env("CRAWLING_PRODUCT_URL")
@@ -41,7 +42,7 @@ class Command(BaseCommand):
                 print("실행을 취소했습니다.")
                 return
 
-        if Category.objects.count() == 0:
+        if Category.objects.count() <= 0:
             self.create_categories(CATEGORY_LIST)
 
         with sync_playwright() as p:
@@ -52,28 +53,22 @@ class Command(BaseCommand):
 
             for page_url, category_name in zip(PAGE_URL_LIST, CATEGORY_LIST):
                 page.goto(page_url)
-                page.wait_for_url(page_url)
+                page.wait_for_timeout(
+                    1000
+                )  # TODO: swiper 효과때매 뒤늦게 요소가 로드. 최소 500ms 소요되기에 1000ms대기. 더 좋은 대안이 있으면 사용
 
                 product_elem_list = page.locator(
                     "#best__product-list > li > article > div"
                 ).all()
 
-                product_instances = (
-                    Product(
-                        brand=Brand.objects.get(name=brand),
-                        category=Category.objects.get(name=category_name),
-                        thumb=convert_file(thumb_url),
-                        name=name,
-                        sale_price=sale_price,
-                        price=price,
-                    )
-                    for brand, thumb_url, name, sale_price, price in self.generate_product_details(
-                        product_elem_list, category_name
-                    )
+                product_instances = self.create_product_details(
+                    product_elem_list, category_name
                 )
 
-                for chunks in get_chunks(product_instances, chunk_size=100):
-                    Product.objects.bulk_create(chunks, ignore_conflicts=True)
+                with transaction.atomic():
+                    Product.objects.bulk_create(
+                        product_instances, ignore_conflicts=True
+                    )
 
             browser.close()
 
@@ -88,13 +83,25 @@ class Command(BaseCommand):
         Category.objects.bulk_create(category_instances, ignore_conflicts=True)
 
     @classmethod
-    def generate_product_details(
+    def create_cache_queries(cls) -> Tuple[Dict, Dict]:
+        brand_cache = {brand.name: brand for brand in Brand.objects.all()}
+        category_cache = {
+            category.name: category for category in Category.objects.all()
+        }
+        return brand_cache, category_cache
+
+    @classmethod
+    def create_product_details(
         cls, product_elem_list: List[Locator], category_name: str
-    ) -> Iterator[str]:
+    ) -> List[Product]:
         product_count = len(product_elem_list)
         pbar = tqdm(
             product_elem_list, total=product_count, desc="제품 세부정보 생성 중"
         )
+
+        brand_cache, category_cache = cls.create_cache_queries()
+
+        product_instance_list = []
 
         for i, product_elem in enumerate(pbar):
             thumb_url = product_elem.locator(
@@ -104,6 +111,12 @@ class Command(BaseCommand):
 
             brand = product_elem.locator("p.info__brand").first.inner_text()
             name = product_elem.locator("h3.info__title").first.inner_text()
+            price = (
+                product_elem.locator("p.info__price > span:nth-of-type(2)")
+                .first.inner_text()
+                .replace(",", "")
+                .strip("₩")
+            )
             sale_price = (
                 product_elem.locator("p.info__price > span.ec-sale-rate")
                 .first.inner_text()
@@ -113,12 +126,17 @@ class Command(BaseCommand):
                 ).first.inner_text()
                 else "0"
             )
-            price = (
-                product_elem.locator("p.info__price > span:nth-of-type(2)")
-                .first.inner_text()
-                .replace(",", "")
-                .strip("₩")
+
+            product_instance = Product(
+                brand=brand_cache[brand],
+                category=category_cache[category_name],
+                thumb=convert_file(thumb_url),
+                name=name,
+                price=price,
+                sale_price=sale_price,
             )
+
+            product_instance_list.append(product_instance)
 
             pbar.set_postfix(
                 product=f"{i + 1}/{product_count}",
@@ -127,4 +145,4 @@ class Command(BaseCommand):
                 name=name,
             )
 
-            yield brand, thumb_url, name, sale_price, price
+        return product_instance_list

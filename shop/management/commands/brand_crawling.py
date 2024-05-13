@@ -1,7 +1,6 @@
 import sys
 import urllib
-from collections import deque
-from typing import Iterator, Union, Tuple, List
+from typing import Union, List, Tuple
 from urllib.parse import urlparse
 
 from colorama import Fore
@@ -43,13 +42,13 @@ class Command(BaseCommand):
             self.scroll_to_the_top(page)
 
             try:
-                for (
-                    brand_instances,
-                    brand_thumb_instances,
-                ) in self.generate_brand_details(page):
-                    with transaction.atomic():
-                        Brand.objects.bulk_create(brand_instances)
-                        BrandThumbnail.objects.bulk_create(brand_thumb_instances)
+                brand_instances, brand_thumb_instances = self.create_brand_details(page)
+                with transaction.atomic():
+                    Brand.objects.bulk_create(brand_instances, ignore_conflicts=True)
+                    if BrandThumbnail.objects.count() <= 0:
+                        BrandThumbnail.objects.bulk_create(
+                            brand_thumb_instances,
+                        )
 
             except ThumbnailFetchError as e:
                 print(f"{Fore.RED}ERROR: {e.message}\nFAILED: {e.image_url}")
@@ -82,20 +81,18 @@ class Command(BaseCommand):
 
         page.wait_for_function("() => document.documentElement.scrollTop === 0")
 
-    # TODO: 튜플 리스트를 반환하기 때문에 제너레이터의 효과가 없음 이후에 수정예정
     @classmethod
-    def generate_brand_details(
+    def create_brand_details(
         cls, page: Page
-    ) -> Iterator[Tuple[List[Brand], List[BrandThumbnail]]]:
+    ) -> Tuple[List[Brand], List[BrandThumbnail]]:
         brand_elem_list = page.locator("#brand__product-list > li").all()
         brand_count = len(brand_elem_list)
         pbar = tqdm(brand_elem_list, total=brand_count, desc="브랜드 세부정보 생성 중")
 
-        brand_instance_que = deque()
-        brand_thumb_instance_que = deque()
+        brand_instance_list = []
+        brand_thumb_instance_list = []
 
         for i, brand_elem in enumerate(pbar):
-
             logo_elem = brand_elem.locator(
                 "article > div > div > div.item__thumb > a > img"
             ).first
@@ -113,30 +110,29 @@ class Command(BaseCommand):
             ).first.inner_text()
 
             brand_instance = Brand(logo_thumb=convert_file(logo_url), name=name)
-            brand_instance_que.append(brand_instance)
+            brand_instance_list.append(brand_instance)
 
-            for thumb_url in cls.generate_brand_thumb_details(page, brand_elem):
-                brand_thumb_instance_que.append(
-                    BrandThumbnail(brand=brand_instance, thumb=convert_file(thumb_url))
-                )
-
-            page.mouse.wheel(0, 300)
+            brand_thumb_instance_list.extend(
+                cls.create_brand_thumb_details(page, brand_elem, brand_instance)
+            )
 
             pbar.set_postfix(
                 brand=f"{i + 1}/{brand_count}",
                 name=name,
             )
 
-        yield brand_instance_que, brand_thumb_instance_que
+        return brand_instance_list, brand_thumb_instance_list
 
     @classmethod
-    def generate_brand_thumb_details(
-        cls, page: Page, brand_elem: Locator
-    ) -> Union[Iterator[str], None]:
+    def create_brand_thumb_details(
+        cls, page: Page, brand_elem: Locator, brand_instance: Brand
+    ) -> Union[List[BrandThumbnail], List]:
+        brand_thumb_instance_list = []
+
         swiper_elem = brand_elem.locator("div.brand-list__swiper").first
 
         if swiper_elem.count() <= 0:
-            return None
+            return []
 
         swiper_box = swiper_elem.bounding_box()
         swiper_pos_x = swiper_box["x"] + swiper_box["width"] / 2
@@ -163,5 +159,10 @@ class Command(BaseCommand):
                 )
 
             thumb_url = urllib.parse.urljoin("https:", thumb_url)
+            brand_thumb_instance_list.append(
+                BrandThumbnail(brand=brand_instance, thumb=convert_file(thumb_url))
+            )
 
-            yield thumb_url
+        page.mouse.wheel(0, 300)
+
+        return brand_thumb_instance_list
