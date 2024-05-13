@@ -34,6 +34,8 @@ tqdm = "*"
 aiohttp = "*"
 django-imagekit = "*"
 colorama = "*"
+django-nextjs = "*"
+channels = {extras = ["daphne"], version = "*"}
 
 [dev-packages]
 black = "*"

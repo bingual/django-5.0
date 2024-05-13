@@ -45,6 +45,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 INSTALLED_APPS = [
     # django apps
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "django_lifecycle_checks",
     "django_components",
     "django_htmx",
+    "django_nextjs",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -128,7 +130,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "base.wsgi.application"
-
+ASGI_APPLICATION = "base.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -240,6 +242,13 @@ CORS_ALLOWED_ORIGINS = env.list(
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 
 SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default="adora.com")
+
+# django-nextjs
+# https://github.com/QueraTeam/django-nextjs
+
+NEXTJS_SETTINGS = {
+    "nextjs_server_url": env.str("NEXTJS_SERVER_URL", default="http://127.0.0.1:3000")
+}
 
 # django-crispy-forms
 # https://github.com/django-crispy-forms/crispy-tailwind

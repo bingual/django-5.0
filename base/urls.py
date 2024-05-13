@@ -3,6 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django_nextjs.render import render_nextjs_page
 from rest_framework import routers
 
 from shop.views import ProductViewSet
@@ -10,8 +11,14 @@ from shop.views import ProductViewSet
 router = routers.DefaultRouter()
 router.register(r"shop", ProductViewSet)
 
+
+async def root(request):
+    return await render_nextjs_page(request)
+
+
 urlpatterns = [
     # local apps
+    path("", root),
     path(settings.ADMIN_PREFIX, admin.site.urls),
     path(
         "admin/",
