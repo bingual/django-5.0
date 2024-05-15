@@ -1,0 +1,42 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myValues">
+        <value>
+          <list size="1">
+            <item index="0" class="java.lang.String" itemvalue="hx-get" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ourVersions">
+        <value>
+          <list size="1">
+            <item index="0" class="java.lang.String" itemvalue="3.13" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="9">
+            <item index="0" class="java.lang.String" itemvalue="httpie" />
+            <item index="1" class="java.lang.String" itemvalue="psycopg2-binary" />
+            <item index="2" class="java.lang.String" itemvalue="django-debug-toolbar" />
+            <item index="3" class="java.lang.String" itemvalue="django-allauth" />
+            <item index="4" class="java.lang.String" itemvalue="django" />
+            <item index="5" class="java.lang.String" itemvalue="rest_framework" />
+            <item index="6" class="java.lang.String" itemvalue="django_filters" />
+            <item index="7" class="java.lang.String" itemvalue="pysocks" />
+            <item index="8" class="java.lang.String" itemvalue="vanilla" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
