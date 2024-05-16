@@ -5,7 +5,7 @@ from django.apps.registry import apps
 from django.core.asgi import get_asgi_application
 from django.urls import re_path, path
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "base.settings")
 
 django_asgi_app = get_asgi_application()
 

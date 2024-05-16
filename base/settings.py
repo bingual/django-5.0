@@ -44,8 +44,8 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 # Application definition
 
 INSTALLED_APPS = [
-    # django apps
     "daphne",
+    # django apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -241,7 +241,7 @@ CORS_ALLOWED_ORIGINS = env.list(
 
 CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", default=True)
 
-SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default="adora.com")
+# SESSION_COOKIE_DOMAIN = env.str("SESSION_COOKIE_DOMAIN", default="adora.com")
 
 # django-nextjs
 # https://github.com/QueraTeam/django-nextjs

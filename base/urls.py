@@ -9,7 +9,7 @@ from rest_framework import routers
 from shop.views import ProductViewSet
 
 router = routers.DefaultRouter()
-router.register(r"shop", ProductViewSet)
+router.register(r"shop/product", ProductViewSet)
 
 
 async def root(request):
@@ -27,7 +27,7 @@ urlpatterns = [
         ),
     ),
     path("accounts/", include("accounts.urls")),
-    path("", include("photolog.urls")),
+    path("photolog/", include("photolog.urls")),
     # api
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/", include(router.urls)),
