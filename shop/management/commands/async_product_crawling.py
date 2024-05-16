@@ -1,0 +1,165 @@
+import asyncio
+import urllib
+import environ
+import nest_asyncio
+
+from typing import List, Tuple, Dict
+from urllib.parse import urlparse
+
+from asgiref.sync import sync_to_async
+from django.core.management import BaseCommand
+from django.db import transaction
+from playwright.async_api import async_playwright, Locator
+from tqdm import tqdm
+
+from shop.models import Product, Category, Brand
+from theme.utils import convert_file, delete_media_directory
+
+nest_asyncio.apply()
+env = environ.Env()
+URL = env("CRAWLING_PRODUCT_URL")
+
+PAGE_URL_LIST = [
+    f"{URL}141",
+    f"{URL}142",
+    f"{URL}143",
+    f"{URL}144",
+    f"{URL}145",
+    f"{URL}146",
+]
+CATEGORY_LIST = ["아우터", "상의", "하의", "신발", "악세사리", "그루밍"]
+
+
+class Command(BaseCommand):
+    help = "크롤링 테스트"
+
+    def handle(self, *args, **options):
+
+        if Brand.objects.count() < 31:
+            print("브랜드 크롤링을 먼저 실행해야합니다.")
+            return
+
+        product_count = Product.objects.count()
+        if Product.objects.count() != 0:
+            user_input = input(
+                "데이터가 이미 존재합니다. 초기화 하고 실행하시겠습니까? (Y/N): "
+            )
+            if user_input.upper() != "Y":
+                print("실행을 취소했습니다.")
+                return
+
+        if product_count != 0:
+            models_to_delete = [Product()]
+            for model_instance in tqdm(
+                models_to_delete, desc="제품 미디어 파일 초기화중"
+            ):
+                delete_media_directory(model_instance)
+
+            for product in tqdm(Product.objects.all(), desc="제품 인스턴스 초기화중"):
+                product.delete()
+
+        if Category.objects.count() == 0:
+            self.create_categories(CATEGORY_LIST)
+
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        asyncio.run(self.main())
+
+    @classmethod
+    async def main(cls):
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+
+            for page_url, category_name in zip(PAGE_URL_LIST, CATEGORY_LIST):
+                await page.goto(page_url)
+                await page.wait_for_timeout(
+                    1000
+                )  # TODO: swiper 효과때매 뒤늦게 요소가 로드. 최소 500ms 소요되기에 1000ms대기. 더 좋은 대안이 있으면 사용
+
+                product_elem_list = await page.locator(
+                    "#best__product-list > li > article > div"
+                ).all()
+
+                product_instances = await cls.create_product_details(
+                    product_elem_list, category_name
+                )
+
+                await sync_to_async(cls.save_to_db)(product_instances)
+
+            await browser.close()
+
+    @classmethod
+    def create_categories(cls, category_list: List[str]) -> None:
+        category_instances = [
+            Category(name=name)
+            for name in tqdm(category_list, desc="카테고리 세부정보 생성 중")
+        ]
+        Category.objects.bulk_create(category_instances, ignore_conflicts=True)
+
+    @classmethod
+    async def create_cache_queries(cls) -> Tuple[Dict, Dict]:
+        brand_cache = {brand.name: brand for brand in Brand.objects.all()}
+        category_cache = {
+            category.name: category for category in Category.objects.all()
+        }
+        return brand_cache, category_cache
+
+    @classmethod
+    async def create_product_details(
+        cls, product_elem_list: List[Locator], category_name: str
+    ) -> List[Product]:
+        product_count = len(product_elem_list)
+        pbar = tqdm(
+            product_elem_list, total=product_count, desc="제품 세부정보 생성 중"
+        )
+
+        brand_cache, category_cache = await cls.create_cache_queries()
+
+        product_instance_list = []
+
+        for i, product_elem in enumerate(pbar):
+            thumb_url = await product_elem.locator(
+                "div.item__thumb > a > img"
+            ).first.get_attribute("src")
+            thumb_url = urllib.parse.urljoin("https:", thumb_url)
+
+            brand = await product_elem.locator("p.info__brand").first.inner_text()
+            name = await product_elem.locator("h3.info__title").first.inner_text()
+            price = await product_elem.locator(
+                "p.info__price > span:nth-of-type(2)"
+            ).first.inner_text()
+            price = price.replace(",", "").strip("₩")
+
+            sale_price = product_elem.locator("p.info__price > span.ec-sale-rate").first
+            if await sale_price.count() != 0:
+                sale_price = await sale_price.inner_text()
+                sale_price = sale_price.rstrip("%")
+                if sale_price == "":
+                    sale_price = "0"
+            else:
+                sale_price = "0"
+
+            product_instance = Product(
+                brand=brand_cache[brand],
+                category=category_cache[category_name],
+                thumb=convert_file(thumb_url),
+                name=name,
+                price=price,
+                sale_price=sale_price,
+            )
+
+            product_instance_list.append(product_instance)
+
+            pbar.set_postfix(
+                product=f"{i + 1}/{product_count}",
+                brand=brand,
+                category=category_name,
+                name=name,
+            )
+
+        return product_instance_list
+
+    @classmethod
+    def save_to_db(cls, product_instances: List[Product]):
+        with transaction.atomic():
+            Product.objects.bulk_create(product_instances, ignore_conflicts=True)
