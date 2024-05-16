@@ -1,5 +1,6 @@
 import itertools
 import os
+import shutil
 import urllib
 from functools import wraps
 from io import BytesIO
@@ -35,6 +36,16 @@ def uuid_name_upload_to(instance: models.Model, filename: str) -> str:
     extension = splitext(filename)[-1].lower()
     new_filename = uuid4().hex + extension
     return "/".join((app_label, cls_name, ymd_path, new_filename))
+
+
+def delete_media_directory(instance: models.Model):
+    root_path = settings.MEDIA_ROOT
+    app_label = instance.__class__._meta.app_label
+    cls_name = instance.__class__.__name__.lower()
+
+    instance_media_path = os.path.join(root_path, app_label, cls_name)
+    if os.path.isdir(instance_media_path):
+        shutil.rmtree(instance_media_path)
 
 
 def make_thumb(

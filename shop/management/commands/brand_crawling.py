@@ -1,4 +1,3 @@
-import sys
 import urllib
 from typing import Union, List, Tuple
 from urllib.parse import urlparse
@@ -12,7 +11,7 @@ from tqdm import tqdm
 
 from shop.models import Brand, BrandThumbnail
 from theme.errors import ThumbnailFetchError
-from theme.utils import convert_file
+from theme.utils import convert_file, delete_media_directory
 
 env = environ.Env()
 URL = env("CRAWLING_BRAND_URL")
@@ -23,17 +22,26 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        if Brand.objects.count() != 0:
+        brand_count = Brand.objects.count()
+        if brand_count != 0:
             user_input = input(
-                "데이터가 이미 존재합니다. 그래도 실행하시겠습니까? (Y/N): "
+                "데이터가 이미 존재합니다. 초기화 하고 실행하시겠습니까? (Y/N): "
             )
             if user_input.upper() != "Y":
                 print("실행을 취소했습니다.")
                 return
 
-        with sync_playwright() as p:
-            print("크롤링 시작")
+        if brand_count != 0:
+            models_to_delete = [Brand(), BrandThumbnail()]
+            for model_instance in tqdm(
+                models_to_delete, desc="브랜드 미디어 파일 초기화중"
+            ):
+                delete_media_directory(model_instance)
 
+            for brand in tqdm(Brand.objects.all(), desc="브랜드 인스턴스 초기화중"):
+                brand.delete()
+
+        with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
             page.goto(URL)
@@ -44,20 +52,17 @@ class Command(BaseCommand):
             try:
                 brand_instances, brand_thumb_instances = self.create_brand_details(page)
                 with transaction.atomic():
-                    Brand.objects.bulk_create(brand_instances, ignore_conflicts=True)
-                    if BrandThumbnail.objects.count() <= 0:
-                        BrandThumbnail.objects.bulk_create(
-                            brand_thumb_instances,
-                        )
+                    Brand.objects.bulk_create(
+                        brand_instances,
+                    )
+                    BrandThumbnail.objects.bulk_create(
+                        brand_thumb_instances,
+                    )
 
             except ThumbnailFetchError as e:
                 print(f"{Fore.RED}ERROR: {e.message}\nFAILED: {e.image_url}")
-                browser.close()
-                sys.exit(1)
 
             browser.close()
-
-        print("크롤링 종료")
 
     @classmethod
     def click_on_load_more_button(cls, page: Page) -> None:
@@ -131,7 +136,7 @@ class Command(BaseCommand):
 
         swiper_elem = brand_elem.locator("div.brand-list__swiper").first
 
-        if swiper_elem.count() <= 0:
+        if swiper_elem.count() == 0:
             return []
 
         swiper_box = swiper_elem.bounding_box()

@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright, Locator
 from tqdm import tqdm
 
 from shop.models import Product, Category, Brand
-from theme.utils import convert_file
+from theme.utils import convert_file, delete_media_directory
 
 env = environ.Env()
 URL = env("CRAWLING_PRODUCT_URL")
@@ -34,20 +34,29 @@ class Command(BaseCommand):
             print("브랜드 크롤링을 먼저 실행해야합니다.")
             return
 
+        product_count = Product.objects.count()
         if Product.objects.count() != 0:
             user_input = input(
-                "데이터가 이미 존재합니다. 그래도 실행하시겠습니까? (Y/N): "
+                "데이터가 이미 존재합니다. 초기화 하고 실행하시겠습니까? (Y/N): "
             )
             if user_input.upper() != "Y":
                 print("실행을 취소했습니다.")
                 return
 
-        if Category.objects.count() <= 0:
+        if product_count != 0:
+            models_to_delete = [Product()]
+            for model_instance in tqdm(
+                models_to_delete, desc="제품 미디어 파일 초기화중"
+            ):
+                delete_media_directory(model_instance)
+
+            for product in tqdm(Product.objects.all(), desc="제품 인스턴스 초기화중"):
+                product.delete()
+
+        if Category.objects.count() == 0:
             self.create_categories(CATEGORY_LIST)
 
         with sync_playwright() as p:
-            print("크롤링 시작")
-
             browser = p.chromium.launch()
             page = browser.new_page()
 
@@ -71,8 +80,6 @@ class Command(BaseCommand):
                     )
 
             browser.close()
-
-        print("크롤링 종료")
 
     @classmethod
     def create_categories(cls, category_list: List[str]) -> None:
