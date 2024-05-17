@@ -4,12 +4,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django_nextjs.render import render_nextjs_page
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework import routers
 
-from shop.views import ProductViewSet
-
-router = routers.DefaultRouter()
-router.register(r"shop/product", ProductViewSet)
+root_router = routers.DefaultRouter()
 
 
 async def root(request):
@@ -28,9 +26,16 @@ urlpatterns = [
     ),
     path("accounts/", include("accounts.urls")),
     path("photolog/", include("photolog.urls")),
+    path("shop/", include("shop.urls")),
     # api
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("api/", include(router.urls)),
+    path("api/", include(root_router.urls)),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
 ]
 
 # pillow

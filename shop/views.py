@@ -1,3 +1,4 @@
+from django_nextjs.render import render_nextjs_page
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 
@@ -41,3 +42,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         else:
             response = super().retrieve(request, *args, **kwargs)
             return response
+
+
+async def product(request):
+    return await render_nextjs_page(request)
