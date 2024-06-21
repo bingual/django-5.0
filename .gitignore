@@ -256,11 +256,11 @@ cython_debug/
 node_modules
 
 # custom
-스크랩 결과/
+#스크랩 결과/
 스크랩 이미지 업데이트/
 screenshot/
 logs/
-*.xlsx
+#*.xlsx
 *.png
 *.jpg
 *.jpeg
