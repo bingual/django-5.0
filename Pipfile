@@ -4,7 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+aiofiles = "*"
 aiohttp = "*"
+celery = "*"
 channels = {extras = ["daphne"], version = "*"}
 colorama = "*"
 crispy-tailwind = "*"
@@ -29,8 +31,10 @@ django-widget-tweaks = "*"
 djangorestframework = "*"
 djangorestframework-simplejwt = "*"
 drf-spectacular = "*"
+flet = "*"
 markdown = "*"
 nest-asyncio = "*"
+opencv-python = "*"
 openpyxl = "*"
 pandas = "*"
 pillow = "*"
@@ -47,6 +51,7 @@ djlint = "*"
 httpie = "*"
 ipython = "*"
 psycopg2-binary = "*"
+pyinstaller = "*"
 pytest-playwright = "*"
 
 [requires]
